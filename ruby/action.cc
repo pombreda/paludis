@@ -364,6 +364,7 @@ namespace
                 parts += fp_unneeded;
 
             ptr = new FetchActionOptions(make_named_values<FetchActionOptions>(
+                        n::cross_compile_host() = "",
                         n::errors() = std::make_shared<Sequence<FetchActionFailure>>(),
                         n::exclude_unmirrorable() = v_exclude_unmirrorable,
                         n::fetch_parts() = parts,
@@ -371,6 +372,7 @@ namespace
                         n::ignore_unfetched() = false,
                         n::make_output_manager() = &make_standard_output_manager,
                         n::safe_resume() = v_safe_resume,
+                        n::tool_prefix() = "",
                         n::want_phase() = &want_all_phases
                     ));
 
@@ -414,7 +416,7 @@ namespace
 
     /*
      * call-seq:
-     *     InfoActionOptions.new() -> InfoActionOptions
+     *     InfoActionOptions.new(cross_compile_host, tool_prefix) -> InfoActionOptions
      *     InfoActionOptions.new(Hash) -> InfoActionOptions
      *
      * InfoActionOptions.new can either be called with all parameters in order,
@@ -427,21 +429,39 @@ namespace
         InfoActionOptions *options = nullptr;
         try
         {
+            std::string cross_compile_host;
+            std::string tool_prefix;
+
             if (argc == 1 && rb_obj_is_kind_of(argv[0], rb_cHash))
             {
-                // TODO(compnerd) raise an error if hashtable is not empty
+                VALUE cross_compile_host_value =
+                    rb_hash_aref(argv[0], ID2SYM(rb_intern("cross_compile_host")));
+                VALUE tool_prefix_value =
+                    rb_hash_aref(argv[0], ID2SYM(rb_intern("tool_prefix")));
+
+                if (cross_compile_host_value == Qnil)
+                    rb_raise(rb_eArgError, "Missing Parameter: cross_compile_host");
+                if (tool_prefix_value == Qnil)
+                    rb_raise(rb_eArgError, "Missing Parameter: tool_prefix");
+
+                cross_compile_host = StringValuePtr(cross_compile_host_value);
+                tool_prefix = StringValuePtr(tool_prefix_value);
             }
-            else if (argc == 0)
+            else if (argc == 2)
             {
+                cross_compile_host = StringValuePtr(argv[0]);
+                tool_prefix = StringValuePtr(argv[1]);
             }
             else
             {
-                rb_raise(rb_eArgError, "InfoActionOptions expects zero or one arguments, but got %d", argc);
+                rb_raise(rb_eArgError, "InfoActionOptions expects one or two arguments, but got %d", argc);
             }
 
             options =
                 new InfoActionOptions(make_named_values<InfoActionOptions>(
-                    n::make_output_manager() = &make_standard_output_manager));
+                    n::cross_compile_host() = cross_compile_host,
+                    n::make_output_manager() = &make_standard_output_manager,
+                    n::tool_prefix() = tool_prefix));
             VALUE object = Data_Wrap_Struct(self, 0, &Common<InfoActionOptions>::free, options);
             rb_obj_call_init(object, argc, argv);
             return object;

@@ -367,6 +367,10 @@ UnpackagedID::perform_action(Action & action) const
     auto symbols_choice(choices->find_by_name_with_prefix(ELikeSymbolsChoiceValue::canonical_name_with_prefix()));
     auto work_choice(choices->find_by_name_with_prefix(ELikeWorkChoiceValue::canonical_name_with_prefix()));
     auto dwarf_compression(choices->find_by_name_with_prefix(ELikeDwarfCompressionChoiceValue::canonical_name_with_prefix()));
+    const auto tool_prefix =
+        install_action->options.destination()->tool_prefix_key()
+            ? install_action->options.destination()->tool_prefix_key()->parse_value()
+            : "";
 
     std::string used_config_protect;
 
@@ -383,7 +387,8 @@ UnpackagedID::perform_action(Action & action) const
                             n::output_manager() = output_manager,
                             n::package_id() = shared_from_this(),
                             n::split() = symbols_choice && symbols_choice->enabled() && ELikeSymbolsChoiceValue::should_split(symbols_choice->parameter()),
-                            n::strip() = symbols_choice && symbols_choice->enabled() && ELikeSymbolsChoiceValue::should_strip(symbols_choice->parameter())
+                            n::strip() = symbols_choice && symbols_choice->enabled() && ELikeSymbolsChoiceValue::should_strip(symbols_choice->parameter()),
+                            n::tool_prefix() = tool_prefix
                             ));
 
                 stripper.strip();

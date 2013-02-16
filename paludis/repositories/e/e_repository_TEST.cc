@@ -914,6 +914,7 @@ TEST(ERepository, Fetch)
     env.add_repository(1, repo);
 
     FetchAction action(make_named_values<FetchActionOptions>(
+                n::cross_compile_host() = "",
                 n::errors() = std::make_shared<Sequence<FetchActionFailure>>(),
                 n::exclude_unmirrorable() = false,
                 n::fetch_parts() = FetchParts() + fp_regulars + fp_extras,
@@ -921,6 +922,7 @@ TEST(ERepository, Fetch)
                 n::ignore_unfetched() = false,
                 n::make_output_manager() = &make_standard_output_manager,
                 n::safe_resume() = true,
+                n::tool_prefix() = "",
                 n::want_phase() = &want_all_phases
             ));
 
@@ -1011,6 +1013,7 @@ TEST(ERepository, ManifestCheck)
     env.add_repository(1, repo);
 
     FetchAction action(make_named_values<FetchActionOptions>(
+                n::cross_compile_host() = "",
                 n::errors() = std::make_shared<Sequence<FetchActionFailure>>(),
                 n::exclude_unmirrorable() = false,
                 n::fetch_parts() = FetchParts() + fp_regulars + fp_extras,
@@ -1018,6 +1021,7 @@ TEST(ERepository, ManifestCheck)
                 n::ignore_unfetched() = false,
                 n::make_output_manager() = &make_standard_output_manager,
                 n::safe_resume() = true,
+                n::tool_prefix() = "",
                 n::want_phase() = &want_all_phases
             ));
 

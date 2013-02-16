@@ -5,6 +5,7 @@
 # Copyright (c) 2008 Bo Ørsted Andresen
 # Copyright (c) 2009 David Leverton
 # Copyright (c) 2009 Mike Kelly
+# Copyright (c) 2013 Saleem Abdulrasool <compnerd@compnerd.org>
 #
 # Based in part upon ebuild.sh from Portage, which is Copyright 1995-2005
 # Gentoo Foundation and distributed under the terms of the GNU General
@@ -34,6 +35,32 @@ nonfatal()
 is_nonfatal()
 {
     [[ -n ${PALUDIS_FAILURE_IS_NONFATAL} ]]
+}
+
+exhost()
+{
+    case "${1}" in
+    --build)
+        echo ${CHOST}
+    ;;
+    --host)
+        die "${1} is banned in ${EAPI}"
+    ;;
+    --is-native)
+        local native=$([[ $(exhost --build) == $(exhost --target) ]]; echo ${?})
+        [[ ${2} == -q || ${2} == --quiet ]] || echo ${native}
+        return ${native}
+    ;;
+    --target)
+        echo ${PALUDIS_CROSS_COMPILE_HOST:-${CHOST}}
+    ;;
+    --tool-prefix)
+        echo ${PALUDIS_CROSS_COMPILE_TOOL_PREFIX:-}
+    ;;
+    *)
+        die "exhost subcommand ${1} unrecognised"
+    ;;
+    esac
 }
 
 expatch()
@@ -98,6 +125,8 @@ expatch()
 
 econf()
 {
+    local arg= default_args=() econf_args=() hates=() prefix=
+
     if [[ "${!PALUDIS_EBUILD_PHASE_VAR}" != "configure" ]] ; then
         die "econf called in phase ${!PALUDIS_EBUILD_PHASE_VAR}"
     fi
@@ -113,44 +142,57 @@ econf()
             done
         fi
 
-        # If the ebuild passed in --prefix, use that to set --libdir. KDE at least needs this.
+        if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
+            prefix=/usr/$(exhost --target)
+        else
+            prefix=/usr
 
-        ECONF_PREFIX=/usr
-        local i hates= econf_args=()
-        for i in "$@"; do
-            case "${i}" in
-                --prefix=*|--exec-prefix=*)
-                    ECONF_PREFIX=${i#--*prefix=} ;;
-                --hates=*)
-                    hates+=" ${i#--hates=} "; continue ;;
+            # If the ebuild passed in --prefix, use that to set --libdir.  KDE
+            # at least needs this.
+            ECONF_PREFIX=/usr
+        fi
+
+        for arg in "${@}" ; do
+            case "${arg}" in
+            --hates=*) hates+=( "${arg#--hates=}" ) ;;
+            *)
+                if [[ ${FILESYSTEM_LAYOUT} != cross && ${arg} == --*prefix=* ]]
+                then
+                    ECONF_PREFIX=${arg#--*prefix=}
+                fi
+
+                econf_args+=( "${arg}" )
+            ;;
             esac
-            econf_args+=( "${i}" )
         done
 
         if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
             local bindir=bin
         fi
 
-        local j default_args=()
-        for i in \
-            --prefix=/usr \
-            --host=${CHOST} \
-            ${CBUILD:+--build=${CBUILD}} \
-            ${CTARGET:+--target=${CTARGET}} \
-            --mandir=/usr/share/man \
-            --infodir=/usr/share/info \
-            --datadir=/usr/share \
-            --docdir=/usr/share/doc/${PNVR} \
-            --sysconfdir=/etc \
-            --localstatedir=/var/lib \
-            --disable-dependency-tracking \
-            --disable-silent-rules \
-            --enable-fast-install \
-            --libdir=${ECONF_PREFIX}/${LIBDIR:-lib} \
-            --bindir=${ECONF_PREFIX}/${bindir:-bin} \
-            --sbindir=${ECONF_PREFIX}/${bindir:-sbin}; do
-            j=${i%%=*}
-            has ${j#--} ${hates} || default_args+=( "${i}" )
+        for arg in --build=$(exhost --build)            \
+                   --host=$(exhost --target)            \
+                   --prefix=${prefix}                   \
+                   --bindir=${prefix}/${bindir:-bin}    \
+                   --sbindir=${prefix}/${bindir:-sbin}  \
+                   --libdir=${prefix}/${LIBDIR:-lib}    \
+                   --datadir=/usr/share                 \
+                   --datarootdir=/usr/share             \
+                   --docdir=/usr/share/doc/${PNVR}      \
+                   --infodir=/usr/share/info            \
+                   --mandir=/usr/share/man              \
+                   --sysconfdir=/etc                    \
+                   --localstatedir=/var/lib             \
+                   --disable-dependency-tracking        \
+                   --disable-silent-rules               \
+                   --enable-fast-install                \
+                   $(if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
+                         echo --libdir=${prefix}/lib
+                     else
+                         echo --libdir=${ECONF_PREFIX}/${LIBDIR:-lib}
+                     fi) ; do
+            local parameter=${arg%%=*}
+            has ${parameter#--} "${hates[@]}" || default_args+=( "${arg}" )
         done
 
         echo ${ECONF_WRAPPER} "${ECONF_SOURCE}"/configure \
@@ -170,18 +212,24 @@ einstall()
     fi
 
     if [[ -f Makefile ]] || [[ -f makefile ]] || [[ -f GNUmakefile ]] ; then
-        local makecmd=""
+        local makecmd="" cmd=
         type -p gmake &>/dev/null && makecmd="gmake" || makecmd="make"
-        local cmd="${EINSTALL_WRAPPER} ${makecmd} prefix=${IMAGE}/usr"
+        if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
+            cmd="${EINSTALL_WRAPPER} ${makecmd} prefix=${IMAGE}/usr/$(exhost --target)"
+        else
+            cmd="${EINSTALL_WRAPPER} ${makecmd} prefix=${IMAGE}/usr"
+        fi
         cmd="${cmd} mandir=${IMAGE}/usr/share/man"
         cmd="${cmd} infodir=${IMAGE}/usr/share/info"
         cmd="${cmd} datadir=${IMAGE}/usr/share"
         cmd="${cmd} sysconfdir=${IMAGE}/etc"
         cmd="${cmd} localstatedir=${IMAGE}/var/lib"
-        cmd="${cmd} libdir=${IMAGE}/usr/${LIBDIR:-lib}"
         if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
+            cmd="${cmd} libdir=${IMAGE}/usr/$(exhost --target)/lib"
             cmd="${cmd} bindir=${IMAGE}/usr/$(exhost --target)/bin"
             cmd="${cmd} sbindir=${IMAGE}/usr/$(exhost --target)/bin"
+        else
+            cmd="${cmd} libdir=${IMAGE}/usr/${LIBDIR:-lib}"
         fi
         cmd="${cmd} ${@} install"
         echo "${cmd}" 1>&2

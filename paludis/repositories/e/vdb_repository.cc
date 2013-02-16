@@ -496,6 +496,7 @@ VDBRepository::perform_uninstall(
                     n::builddir() = _imp->params.builddir(),
                     n::clearenv() = phase->option("clearenv"),
                     n::commands() = join(phase->begin_commands(), phase->end_commands(), " "),
+                    n::cross_compile_host() = "",
                     n::distdir() = pkg_dir,
                     n::ebuild_dir() = pkg_dir,
                     n::ebuild_file() = pkg_dir / (stringify(id->name().package()) + "-" + stringify(id->version()) + ".ebuild"),
@@ -512,6 +513,7 @@ VDBRepository::perform_uninstall(
                     n::root() = stringify(_imp->params.root()),
                     n::sandbox() = phase->option("sandbox"),
                     n::sydbox() = phase->option("sydbox"),
+                    n::tool_prefix() = "",
                     n::userpriv() = phase->option("userpriv"),
                     n::volatile_files() = nullptr
                     ));
@@ -925,6 +927,18 @@ VDBRepository::installed_root_key() const
 
 const std::shared_ptr<const MetadataCollectionKey<Map<std::string, std::string> > >
 VDBRepository::sync_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+VDBRepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+VDBRepository::tool_prefix_key() const
 {
     return nullptr;
 }

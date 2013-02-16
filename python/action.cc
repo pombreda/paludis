@@ -100,7 +100,9 @@ namespace
     InfoActionOptions * make_info_action_options()
     {
         return new InfoActionOptions(make_named_values<InfoActionOptions>(
-                    n::make_output_manager() = &make_standard_output_manager
+                    n::cross_compile_host() = "",
+                    n::make_output_manager() = &make_standard_output_manager,
+                    n::tool_prefix() = ""
                     ));
     }
 
@@ -133,6 +135,7 @@ namespace
             parts += fp_unneeded;
 
         return new FetchActionOptions(make_named_values<FetchActionOptions>(
+                    n::cross_compile_host() = "",
                     n::errors() = std::make_shared<Sequence<FetchActionFailure>>(),
                     n::exclude_unmirrorable() = exclude_unmirrorable,
                     n::fetch_parts() = parts,
@@ -140,6 +143,7 @@ namespace
                     n::ignore_unfetched() = false,
                     n::make_output_manager() = &make_standard_output_manager,
                     n::safe_resume() = safe_resume,
+                    n::tool_prefix() = "",
                     n::want_phase() = &want_all_phases
                     ));
     }

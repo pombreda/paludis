@@ -218,6 +218,7 @@ paludis::erepository::do_install_action(
     auto parts(std::make_shared<Partitioning>());
     auto choices(id->choices_key()->parse_value());
     auto work_choice(choices->find_by_name_with_prefix(ELikeWorkChoiceValue::canonical_name_with_prefix()));
+    auto destination = install_action.options.destination();
     auto volatile_files(std::make_shared<FSPathSet>());
 
     EAPIPhases phases(id->eapi()->supported()->ebuild_phases()->ebuild_install());
@@ -264,9 +265,9 @@ paludis::erepository::do_install_action(
 
         if (phase->option("merge") || phase->option("check_merge"))
         {
-            if (! (*install_action.options.destination()).destination_interface())
+            if (! destination->destination_interface())
                 throw ActionFailedError("Can't install '" + stringify(*id)
-                        + "' to destination '" + stringify(install_action.options.destination()->name())
+                        + "' to destination '" + stringify(destination->name())
                         + "' because destination does not provide destination_interface");
 
             MergerOptions extra_merger_options;
@@ -274,7 +275,7 @@ paludis::erepository::do_install_action(
                 extra_merger_options += mo_nondestructive;
 
             Timestamp build_start_time(FSPath(package_builddir / "temp" / "build_start_time").stat().mtim());
-            (*install_action.options.destination()).destination_interface()->merge(
+            destination->destination_interface()->merge(
                     make_named_values<MergeParams>(
                         n::build_start_time() = build_start_time,
                         n::check() = phase->option("check_merge"),
@@ -319,8 +320,9 @@ paludis::erepository::do_install_action(
             if ((! id->eapi()->supported()->is_pbin()) && (! strip_restrict))
             {
                 std::string libdir("lib");
-                FSPath root(install_action.options.destination()->installed_root_key() ?
-                        stringify(install_action.options.destination()->installed_root_key()->parse_value()) : "/");
+                FSPath root(destination->installed_root_key()
+                                ? stringify(destination->installed_root_key()->parse_value())
+                                : "/");
                 if ((root / "usr" / "lib").stat().is_symlink())
                 {
                     libdir = (root / "usr" / "lib").readlink();
@@ -334,6 +336,10 @@ paludis::erepository::do_install_action(
                             ELikeSymbolsChoiceValue::canonical_name_with_prefix()));
 
                 auto dwarf_compression(choices->find_by_name_with_prefix(ELikeDwarfCompressionChoiceValue::canonical_name_with_prefix()));
+                const auto tool_prefix =
+                    destination->tool_prefix_key()
+                        ? destination->tool_prefix_key()->parse_value()
+                        : "";
 
                 EStripper stripper(make_named_values<EStripperOptions>(
                             n::compress_splits() = symbols_choice && symbols_choice->enabled() && ELikeSymbolsChoiceValue::should_compress(
@@ -344,14 +350,15 @@ paludis::erepository::do_install_action(
                             n::output_manager() = output_manager,
                             n::package_id() = id,
                             n::split() = symbols_choice && symbols_choice->enabled() && ELikeSymbolsChoiceValue::should_split(symbols_choice->parameter()),
-                            n::strip() = symbols_choice && symbols_choice->enabled() && ELikeSymbolsChoiceValue::should_strip(symbols_choice->parameter())
+                            n::strip() = symbols_choice && symbols_choice->enabled() && ELikeSymbolsChoiceValue::should_strip(symbols_choice->parameter()),
+                            n::tool_prefix() = tool_prefix
                             ));
                 stripper.strip();
             }
         }
         else if ((! phase->option("prepost")) ||
-                ((*install_action.options.destination()).destination_interface() &&
-                 (*install_action.options.destination()).destination_interface()->want_pre_post_phases()))
+                (destination->destination_interface() &&
+                 destination->destination_interface()->want_pre_post_phases()))
         {
             if (phase->option("optional_tests"))
             {
@@ -388,6 +395,10 @@ paludis::erepository::do_install_action(
                     n::builddir() = params.builddir(),
                     n::clearenv() = phase->option("clearenv"),
                     n::commands() = join(phase->begin_commands(), phase->end_commands(), " "),
+                    n::cross_compile_host() =
+                        destination->cross_compile_host_key()
+                            ? destination->cross_compile_host_key()->parse_value()
+                            : "",
                     n::distdir() = params.distdir(),
                     n::ebuild_dir() = repo->layout()->package_directory(id->name()),
                     n::ebuild_file() = id->fs_location_key()->parse_value(),
@@ -403,11 +414,16 @@ paludis::erepository::do_install_action(
                     n::portdir() =
                         (params.master_repositories() && ! params.master_repositories()->empty()) ?
                         (*params.master_repositories()->begin())->params().location() : params.location(),
-                    n::root() = install_action.options.destination()->installed_root_key() ?
-                        stringify(install_action.options.destination()->installed_root_key()->parse_value()) :
-                        "/",
+                    n::root() =
+                        destination->installed_root_key()
+                            ? stringify(destination->installed_root_key()->parse_value())
+                            : "/",
                     n::sandbox() = phase->option("sandbox"),
                     n::sydbox() = phase->option("sydbox"),
+                    n::tool_prefix() =
+                        destination->tool_prefix_key()
+                            ? destination->tool_prefix_key()->parse_value()
+                            : "",
                     n::userpriv() = phase->option("userpriv") && userpriv_ok,
                     n::volatile_files() = volatile_files
                     ));
@@ -419,7 +435,11 @@ paludis::erepository::do_install_action(
                             n::accept_license() = accept_license,
                             n::config_protect() = repo->environment_updated_profile_variable("CONFIG_PROTECT"),
                             n::config_protect_mask() = repo->environment_updated_profile_variable("CONFIG_PROTECT_MASK"),
-                            n::destination() = install_action.options.destination(),
+                            n::cross_compile_host() =
+                                destination->cross_compile_host_key()
+                                    ? destination->cross_compile_host_key()->parse_value()
+                                    : "",
+                            n::destination() = destination,
                             n::expand_vars() = expand_vars,
                             n::is_from_pbin() = id->eapi()->supported()->is_pbin(),
                             n::loadsaveenv_dir() = package_builddir / "temp",
@@ -427,6 +447,10 @@ paludis::erepository::do_install_action(
                             n::profiles_with_parents() = profile->profiles_with_parents(),
                             n::replacing_ids() = install_action.options.replacing(),
                             n::slot() = id->slot_key() ? stringify(id->slot_key()->parse_value().raw_value()) : "",
+                            n::tool_prefix() =
+                                destination->tool_prefix_key()
+                                    ? destination->tool_prefix_key()->parse_value()
+                                    : "",
                             n::use() = use,
                             n::use_expand() = join(profile->use_expand()->begin(), profile->use_expand()->end(), " "),
                             n::use_expand_hidden() = join(profile->use_expand_hidden()->begin(), profile->use_expand_hidden()->end(), " ")
@@ -451,6 +475,10 @@ paludis::erepository::do_install_action(
                                     n::builddir() = params.builddir(),
                                     n::clearenv() = tidyup_phase->option("clearenv"),
                                     n::commands() = join(tidyup_phase->begin_commands(), tidyup_phase->end_commands(), " "),
+                                    n::cross_compile_host() =
+                                        destination->cross_compile_host_key()
+                                            ? destination->cross_compile_host_key()->parse_value()
+                                            : "",
                                     n::distdir() = params.distdir(),
                                     n::ebuild_dir() = repo->layout()->package_directory(id->name()),
                                     n::ebuild_file() = id->fs_location_key()->parse_value(),
@@ -467,11 +495,16 @@ paludis::erepository::do_install_action(
                                         (params.master_repositories() && ! params.master_repositories()->empty())
                                             ? (*params.master_repositories()->begin())->params().location()
                                             : params.location(),
-                                    n::root() = install_action.options.destination()->installed_root_key() ?
-                                    stringify(install_action.options.destination()->installed_root_key()->parse_value()) :
-                                    "/",
+                                    n::root() =
+                                        destination->installed_root_key()
+                                            ?  stringify(destination->installed_root_key()->parse_value())
+                                            : "/",
                                     n::sandbox() = tidyup_phase->option("sandbox"),
                                     n::sydbox() = tidyup_phase->option("sydbox"),
+                                    n::tool_prefix() =
+                                        destination->tool_prefix_key()
+                                            ? destination->tool_prefix_key()->parse_value()
+                                            : "",
                                     n::userpriv() = tidyup_phase->option("userpriv") && userpriv_ok,
                                     n::volatile_files() = volatile_files
                                         ));
@@ -483,7 +516,11 @@ paludis::erepository::do_install_action(
                                     n::accept_license() = accept_license,
                                     n::config_protect() = repo->environment_updated_profile_variable("CONFIG_PROTECT"),
                                     n::config_protect_mask() = repo->environment_updated_profile_variable("CONFIG_PROTECT_MASK"),
-                                    n::destination() = install_action.options.destination(),
+                                    n::cross_compile_host() =
+                                        destination->cross_compile_host_key()
+                                            ? destination->cross_compile_host_key()->parse_value()
+                                            : "",
+                                    n::destination() = destination,
                                     n::expand_vars() = expand_vars,
                                     n::is_from_pbin() = id->eapi()->supported()->is_pbin(),
                                     n::loadsaveenv_dir() = package_builddir / "temp",
@@ -491,6 +528,10 @@ paludis::erepository::do_install_action(
                                     n::profiles_with_parents() = profile->profiles_with_parents(),
                                     n::replacing_ids() = install_action.options.replacing(),
                                     n::slot() = id->slot_key() ? stringify(id->slot_key()->parse_value().raw_value()) : "",
+                                    n::tool_prefix() =
+                                        destination->tool_prefix_key()
+                                            ? destination->tool_prefix_key()->parse_value()
+                                            : "",
                                     n::use() = use,
                                     n::use_expand() = join(profile->use_expand()->begin(), profile->use_expand()->end(), " "),
                                     n::use_expand_hidden() = join(profile->use_expand_hidden()->begin(), profile->use_expand_hidden()->end(), " ")
@@ -507,7 +548,7 @@ paludis::erepository::do_install_action(
     }
 
     /* replacing for pbins is done during the merge */
-    if (install_action.options.destination()->installed_root_key())
+    if (destination->installed_root_key())
         for (PackageIDSequence::ConstIterator i(install_action.options.replacing()->begin()), i_end(install_action.options.replacing()->end()) ;
                 i != i_end ; ++i)
         {

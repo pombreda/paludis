@@ -288,6 +288,18 @@ RepositoryRepository::sync_host_key() const
     return nullptr;
 }
 
+const std::shared_ptr<const MetadataValueKey<std::string> >
+RepositoryRepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+RepositoryRepository::tool_prefix_key() const
+{
+    return nullptr;
+}
+
 bool
 RepositoryRepository::is_suitable_destination_for(const std::shared_ptr<const PackageID> & id) const
 {

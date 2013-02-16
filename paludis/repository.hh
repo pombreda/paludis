@@ -318,6 +318,26 @@ namespace paludis
              */
             virtual const std::shared_ptr<const MetadataCollectionKey<Map<std::string, std::string> > > sync_host_key() const = 0;
 
+            /**
+             * The cross_compile_host key, if present, should have a value
+             * containing the host to which the packages have been
+             * cross-compiled.
+             *
+             * \since 1.1.0
+             */
+            virtual const std::shared_ptr<const MetadataValueKey<std::string> >
+                cross_compile_host_key() const = 0;
+
+            /**
+             * The tool_prefix key, if present, should have a value containing
+             * the tool prefix for the cross-compile host.  This key should only
+             * be considered if the cross_compile_host key is set.
+             *
+             * \since 1.1.0
+             */
+            virtual const std::shared_ptr<const MetadataValueKey<std::string> >
+                tool_prefix_key() const = 0;
+
             ///\}
 
             ///\name Repository content queries

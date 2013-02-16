@@ -261,6 +261,18 @@ AccountsRepository::sync_host_key() const
     return nullptr;
 }
 
+const std::shared_ptr<const MetadataValueKey<std::string> >
+AccountsRepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+AccountsRepository::tool_prefix_key() const
+{
+    return nullptr;
+}
+
 void
 AccountsRepository::invalidate()
 {

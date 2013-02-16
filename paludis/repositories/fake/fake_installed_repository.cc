@@ -41,6 +41,7 @@ namespace paludis
     {
         std::shared_ptr<const MetadataValueKey<std::string> > format_key;
         std::shared_ptr<const MetadataValueKey<FSPath> > installed_root_key;
+
         const bool supports_uninstall;
         const bool is_suitable_destination;
 
@@ -207,6 +208,18 @@ FakeInstalledRepository::repository_factory_dependencies(
 
 const std::shared_ptr<const MetadataCollectionKey<Map<std::string, std::string> > >
 FakeInstalledRepository::sync_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+FakeInstalledRepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+FakeInstalledRepository::tool_prefix_key() const
 {
     return nullptr;
 }

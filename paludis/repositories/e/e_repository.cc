@@ -1650,6 +1650,18 @@ ERepository::sync_host_key() const
     return _imp->sync_host_key;
 }
 
+const std::shared_ptr<const MetadataValueKey<std::string> >
+ERepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+ERepository::tool_prefix_key() const
+{
+    return nullptr;
+}
+
 const std::shared_ptr<const ERepositoryID>
 ERepository::make_id(const QualifiedPackageName & q, const FSPath & f) const
 {
@@ -1702,6 +1714,10 @@ ERepository::get_environment_variable(
             n::builddir() = _imp->params.builddir(),
             n::clearenv() = phases.begin_phases()->option("clearenv"),
             n::commands() = join(phases.begin_phases()->begin_commands(), phases.begin_phases()->end_commands(), " "),
+            n::cross_compile_host() =
+                cross_compile_host_key()
+                    ? cross_compile_host_key()->parse_value()
+                    : "",
             n::distdir() = _imp->params.distdir(),
             n::ebuild_dir() = layout()->package_directory(id->name()),
             n::ebuild_file() = id->fs_location_key()->parse_value(),
@@ -1720,6 +1736,10 @@ ERepository::get_environment_variable(
             n::root() = "/",
             n::sandbox() = phases.begin_phases()->option("sandbox"),
             n::sydbox() = phases.begin_phases()->option("sydbox"),
+            n::tool_prefix() =
+                tool_prefix_key()
+                    ? tool_prefix_key()->parse_value()
+                    : "",
             n::userpriv() = phases.begin_phases()->option("userpriv") && userpriv_ok,
             n::volatile_files() = nullptr
             ),

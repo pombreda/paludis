@@ -87,6 +87,10 @@ namespace paludis
             virtual const std::shared_ptr<const MetadataValueKey<FSPath> > location_key() const;
             virtual const std::shared_ptr<const MetadataValueKey<FSPath> > installed_root_key() const;
             virtual const std::shared_ptr<const MetadataCollectionKey<Map<std::string, std::string> > > sync_host_key() const;
+            virtual const std::shared_ptr<const MetadataValueKey<std::string> >
+                cross_compile_host_key() const;
+            virtual const std::shared_ptr<const MetadataValueKey<std::string> >
+                tool_prefix_key() const;
 
             virtual const std::shared_ptr<const Set<std::string> > maybe_expand_licence_nonrecursively(
                     const std::string &) const;

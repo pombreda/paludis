@@ -305,6 +305,10 @@ EbuildID::need_non_xml_keys_added() const
                     n::builddir() = e_repo->params().builddir(),
                     n::clearenv() = phases.begin_phases()->option("clearenv"),
                     n::commands() = join(phases.begin_phases()->begin_commands(), phases.begin_phases()->end_commands(), " "),
+                    n::cross_compile_host() =
+                        e_repo->cross_compile_host_key()
+                            ? e_repo->cross_compile_host_key()->parse_value()
+                            : "",
                     n::distdir() = e_repo->params().distdir(),
                     n::ebuild_dir() = e_repo->layout()->package_directory(name()),
                     n::ebuild_file() = _imp->fs_location->parse_value(),
@@ -323,6 +327,10 @@ EbuildID::need_non_xml_keys_added() const
                     n::root() = "/",
                     n::sandbox() = phases.begin_phases()->option("sandbox"),
                     n::sydbox() = phases.begin_phases()->option("sydbox"),
+                    n::tool_prefix() =
+                        e_repo->tool_prefix_key()
+                            ? e_repo->tool_prefix_key()->parse_value()
+                            : "",
                     n::userpriv() = phases.begin_phases()->option("userpriv"),
                     n::volatile_files() = nullptr
                     ));

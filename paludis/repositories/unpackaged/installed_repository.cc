@@ -490,6 +490,18 @@ InstalledUnpackagedRepository::sync_host_key() const
     return nullptr;
 }
 
+const std::shared_ptr<const MetadataValueKey<std::string> >
+InstalledUnpackagedRepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+InstalledUnpackagedRepository::tool_prefix_key() const
+{
+    return nullptr;
+}
+
 const std::shared_ptr<const Set<std::string> >
 InstalledUnpackagedRepository::maybe_expand_licence_nonrecursively(const std::string &) const
 {

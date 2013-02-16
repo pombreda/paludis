@@ -676,6 +676,8 @@ namespace
             return dt_install_to_slash;
         else if (arg.argument() == "chroot")
             return dt_install_to_chroot;
+        else if (arg.argument() == "cross-compile")
+            return dt_cross_compile;
         else
             throw args::DoHelp("Don't understand argument '" + arg.argument() + "' to '--"
                     + arg.long_name() + "'");

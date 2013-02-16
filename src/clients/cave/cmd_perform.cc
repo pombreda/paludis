@@ -463,6 +463,7 @@ PerformCommand::run(
         WantInstallPhase want_phase(cmdline, output_manager_holder);
         std::shared_ptr<Sequence<FetchActionFailure> > failures(std::make_shared<Sequence<FetchActionFailure>>());
         FetchActionOptions options(make_named_values<FetchActionOptions>(
+                    n::cross_compile_host() = "",
                     n::errors() = failures,
                     n::exclude_unmirrorable() = cmdline.a_exclude_unmirrorable.specified(),
                     n::fetch_parts() = parts,
@@ -470,6 +471,7 @@ PerformCommand::run(
                     n::ignore_unfetched() = cmdline.a_ignore_unfetched.specified(),
                     n::make_output_manager() = std::ref(output_manager_holder),
                     n::safe_resume() = true,
+                    n::tool_prefix() = "",
                     n::want_phase() = want_phase
                     ));
         FetchAction fetch_action(options);
@@ -499,6 +501,7 @@ PerformCommand::run(
 
         OutputManagerFromIPCOrEnvironment output_manager_holder(env.get(), cmdline, id);
         FetchActionOptions options(make_named_values<FetchActionOptions>(
+                    n::cross_compile_host() = "",
                     n::errors() = std::make_shared<Sequence<FetchActionFailure>>(),
                     n::exclude_unmirrorable() = cmdline.a_exclude_unmirrorable.specified(),
                     n::fetch_parts() = parts,
@@ -506,6 +509,7 @@ PerformCommand::run(
                     n::ignore_unfetched() = cmdline.a_ignore_unfetched.specified(),
                     n::make_output_manager() = std::ref(output_manager_holder),
                     n::safe_resume() = true,
+                    n::tool_prefix() = "",
                     n::want_phase() = &want_all_phases
                     ));
         OurPretendFetchAction pretend_fetch_action(options);
@@ -528,7 +532,9 @@ PerformCommand::run(
 
         OutputManagerFromIPCOrEnvironment output_manager_holder(env.get(), cmdline, id);
         InfoActionOptions options(make_named_values<InfoActionOptions>(
-                    n::make_output_manager() = std::ref(output_manager_holder)
+                    n::cross_compile_host() = "",
+                    n::make_output_manager() = std::ref(output_manager_holder),
+                    n::tool_prefix() = ""
                     ));
         InfoAction info_action(options);
         execute(env, cmdline, id, action, info_action, output_manager_holder);

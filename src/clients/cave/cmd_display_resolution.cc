@@ -363,6 +363,10 @@ namespace
                 result << ", creating a binary";
                 break;
 
+            case dt_cross_compile:
+                result << ", cross compiling";
+                break;
+
             case last_dt:
                 break;
         }
@@ -1081,6 +1085,7 @@ namespace
         OutputManagerFromEnvironment output_manager_holder(env.get(), id, oe_exclusive, { });
 
         FindDistfilesSize action(make_named_values<FetchActionOptions>(
+                    n::cross_compile_host() = "",
                     n::errors() = std::make_shared<Sequence<FetchActionFailure>>(),
                     n::exclude_unmirrorable() = false,
                     n::fetch_parts() = FetchParts() + fp_regulars,
@@ -1088,6 +1093,7 @@ namespace
                     n::ignore_unfetched() = false,
                     n::make_output_manager() = std::ref(output_manager_holder),
                     n::safe_resume() = true,
+                    n::tool_prefix() = "",
                     n::want_phase() = &want_all_phases
                     ),
                 totals);
@@ -1158,6 +1164,12 @@ namespace
                         c = c::green().colour_string();
                         if (maybe_totals)
                             ++maybe_totals->binary_installs_count;
+                        continue;
+
+                    case dt_cross_compile:
+                        c = c::pink().colour_string();
+                        if (maybe_totals)
+                            ++maybe_totals->installs_ct_count.insert(std::make_pair(decision.change_type(), 0)).first->second;
                         continue;
 
                     case last_dt:

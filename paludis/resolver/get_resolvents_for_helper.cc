@@ -206,6 +206,13 @@ namespace
                             }
                             break;
 
+                        case dt_cross_compile:
+                          if (dep.from_resolvent().destination_type() == dt_cross_compile &
+                              is_run_or_post_dep(env, package_id, dep.sanitised_dependency()) &&
+                              can_cross_compile(package_id))
+                              extras += dt_cross_compile;
+                          break;
+
                         case dt_install_to_chroot:
                             {
                                 bool chroot_if_possible(false);
@@ -261,6 +268,28 @@ namespace
                     n::has_version_requirements() = indeterminate
                     ));
     }
+
+    Filter generate_filter_for_destination(const Environment * const env,
+                                           const DestinationType & destination)
+    {
+        switch (destination)
+        {
+            case dt_install_to_chroot:
+                return filter::InstalledNotAtRoot(env->system_root_key()->parse_value());
+
+            case dt_create_binary:
+            case dt_install_to_slash:
+                return filter::InstalledAtRoot(env->system_root_key()->parse_value());
+
+            case dt_cross_compile:
+                return filter::InstalledAtRoot(env->system_root_key()->parse_value());
+
+            case last_dt:
+                break;
+        }
+
+        throw InternalError(PALUDIS_HERE, "unhandled dt");
+    }
 }
 
 std::pair<std::shared_ptr<const Resolvents>, bool>
@@ -300,11 +329,10 @@ GetResolventsForHelper::operator() (
     if (! ids->empty())
         best = *ids->begin();
 
-    auto installed_ids(_imp->remove_hidden((*_imp->env)[selection::BestVersionInEachSlot(
-                    generator::Matches(spec, from_id, { }) |
-                    (_imp->target_destination_type == dt_install_to_chroot ?
-                     Filter(filter::InstalledNotAtRoot(_imp->env->system_root_key()->parse_value())) :
-                     Filter(filter::InstalledAtRoot(_imp->env->system_root_key()->parse_value()))))]));
+    auto matches = generator::Matches(spec, from_id, { });
+    auto filter = generate_filter_for_destination(_imp->env,
+                                                  _imp->target_destination_type);
+    auto installed_ids(_imp->remove_hidden((*_imp->env)[selection::BestVersionInEachSlot(matches | filter)]));
 
     if (! best)
         std::copy(installed_ids->begin(), installed_ids->end(), result_ids->back_inserter());

@@ -66,6 +66,11 @@ namespace
     {
         return s == "exndbam-1";
     }
+
+    std::string native_compile_target()
+    {
+        return "(native)";
+    }
 }
 
 namespace paludis
@@ -81,6 +86,8 @@ namespace paludis
         std::shared_ptr<const MetadataValueKey<std::string> > format_key;
         std::shared_ptr<const MetadataValueKey<FSPath> > builddir_key;
         std::shared_ptr<const MetadataValueKey<std::string> > eapi_when_unknown_key;
+        std::shared_ptr<const MetadataValueKey<std::string> > cross_compile_host_key;
+        std::shared_ptr<const MetadataValueKey<std::string> > tool_prefix_key;
 
         Imp(const ExndbamRepositoryParams & p) :
             params(p),
@@ -96,7 +103,11 @@ namespace paludis
             builddir_key(std::make_shared<LiteralMetadataValueKey<FSPath> >("builddir", "builddir",
                         mkt_normal, params.builddir())),
             eapi_when_unknown_key(std::make_shared<LiteralMetadataValueKey<std::string> >(
-                        "eapi_when_unknown", "eapi_when_unknown", mkt_normal, params.eapi_when_unknown()))
+                        "eapi_when_unknown", "eapi_when_unknown", mkt_normal, params.eapi_when_unknown())),
+            cross_compile_host_key(std::make_shared<LiteralMetadataValueKey<std::string> >("cross_compile_host",
+                        "cross_compile_host", mkt_normal, params.cross_compile_host())),
+            tool_prefix_key(std::make_shared<LiteralMetadataValueKey<std::string> >("tool_prefix",
+                        "tool_prefix", mkt_normal, params.tool_prefix()))
         {
         }
     };
@@ -133,6 +144,8 @@ ExndbamRepository::_add_metadata_keys() const
     add_metadata_key(_imp->format_key);
     add_metadata_key(_imp->builddir_key);
     add_metadata_key(_imp->eapi_when_unknown_key);
+    add_metadata_key(_imp->cross_compile_host_key);
+    add_metadata_key(_imp->tool_prefix_key);
 }
 
 std::shared_ptr<Repository>
@@ -165,6 +178,14 @@ ExndbamRepository::repository_factory_create(
                 *DistributionData::get_instance()->distribution_from_string(
                     env->distribution()))->default_eapi_when_unknown();
 
+    std::string cross_compile_host(f("cross_compile_host"));
+    if (cross_compile_host.empty())
+        cross_compile_host = native_compile_target();
+
+    std::string tool_prefix(f("tool_prefix"));
+    if (tool_prefix.empty())
+        tool_prefix = "(none)";
+
     return std::make_shared<ExndbamRepository>(
             RepositoryName(name),
             make_named_values<ExndbamRepositoryParams>(
@@ -172,7 +193,9 @@ ExndbamRepository::repository_factory_create(
                 n::eapi_when_unknown() = eapi_when_unknown,
                 n::environment() = env,
                 n::location() = location,
-                n::root() = root
+                n::root() = root,
+                n::cross_compile_host() = cross_compile_host,
+                n::tool_prefix() = tool_prefix
                 )
             );
 }
@@ -294,6 +317,20 @@ const std::shared_ptr<const MetadataCollectionKey<Map<std::string, std::string> 
 ExndbamRepository::sync_host_key() const
 {
     return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+ExndbamRepository::cross_compile_host_key() const
+{
+    if (_imp->cross_compile_host_key->parse_value() == native_compile_target())
+        return nullptr;
+    return _imp->cross_compile_host_key;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+ExndbamRepository::tool_prefix_key() const
+{
+    return _imp->tool_prefix_key;
 }
 
 void
@@ -663,6 +700,7 @@ ExndbamRepository::perform_uninstall(
                         n::builddir() = _imp->params.builddir(),
                         n::clearenv() = phase->option("clearenv"),
                         n::commands() = join(phase->begin_commands(), phase->end_commands(), " "),
+                        n::cross_compile_host() = _imp->params.cross_compile_host(),
                         n::distdir() = ver_dir,
                         n::ebuild_dir() = ver_dir,
                         n::ebuild_file() = ver_dir / (stringify(id->name().package()) + "-" + stringify(id->version()) + ".ebuild"),
@@ -679,6 +717,7 @@ ExndbamRepository::perform_uninstall(
                         n::root() = stringify(_imp->params.root()),
                         n::sandbox() = phase->option("sandbox"),
                         n::sydbox() = phase->option("sydbox"),
+                        n::tool_prefix() = _imp->params.tool_prefix(),
                         n::userpriv() = phase->option("userpriv"),
                         n::volatile_files() = nullptr
                     ));

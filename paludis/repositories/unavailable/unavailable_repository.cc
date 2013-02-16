@@ -419,6 +419,18 @@ UnavailableRepository::sync_host_key() const
     return _imp->sync_host_key;
 }
 
+const std::shared_ptr<const MetadataValueKey<std::string> >
+UnavailableRepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+UnavailableRepository::tool_prefix_key() const
+{
+    return nullptr;
+}
+
 const std::shared_ptr<const Set<std::string> >
 UnavailableRepository::maybe_expand_licence_nonrecursively(const std::string &) const
 {

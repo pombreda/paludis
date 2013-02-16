@@ -153,6 +153,18 @@ FakeRepository::sync_host_key() const
     return nullptr;
 }
 
+const std::shared_ptr<const MetadataValueKey<std::string> >
+FakeRepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string> >
+FakeRepository::tool_prefix_key() const
+{
+    return nullptr;
+}
+
 const std::shared_ptr<const Set<std::string> >
 FakeRepository::maybe_expand_licence_nonrecursively(const std::string &) const
 {
