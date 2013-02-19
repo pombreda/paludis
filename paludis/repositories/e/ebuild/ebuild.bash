@@ -528,8 +528,60 @@ ebuild_load_em_up_dan()
         fi
     fi
 
-    [[ -z ${CBUILD} ]] && export CBUILD=${CHOST}
-    export REAL_CHOST=${CHOST}
+    umask 022
+    export DESTTREE="/usr"
+    export INSDESTTREE=""
+    export EXEDESTTREE=""
+    export DOCDESTTREE=""
+    export INSOPTIONS="-m0644"
+    export EXEOPTIONS="-m0755"
+    export LIBOPTIONS="-m0644"
+    export DIROPTIONS="-m0755"
+    export MOPREFIX="${PN}"
+
+    # We need to set variables like CHOST, CC, CLAGS etc. properly after
+    # profiles and user bashrc have been sourced but before the exheres gets
+    # sourced
+    if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
+        # this is a really icky place to put this
+        # it needs to be before any phase is called and after profiles were loaded
+        DESTTREE=/usr/$(exhost --target)
+
+        local tool cross_tool_prefix=$(exhost --tool-prefix)
+        local flag host_flag host_prepend_flag cross_flag_prefix=$(exhost --target)
+
+        # TODO(zlin) figure out if this should just be hardcoded here rather
+        # than placed into profiles (as is currently)
+        #   CROSS_COMPILE_TOOLS="AR:ar AS:as CC:gcc CPP:cpp CXX:g++ FORTRAN:gfortran LD:ld NM:nm RANLIB:ranlib"
+        for tool in ${CROSS_COMPILE_TOOLS} ; do
+            export ${tool%:*}=${cross_tool_prefix}${tool#*:}
+        done
+
+        # TODO(zlin) figure out if this should just be hardcoded here rather
+        # than placed into profiles (as is currently)
+        #    CROSS_COMPILE_FLAGS="CFLAGS CPPFLAGS:CFLAGS CXXFLAGS LDFLAGS"
+        for flag in ${CROSS_COMPILE_FLAGS} ; do
+            # ARM_CFLAGS
+            if [[ ${flag} == *:* ]] ; then
+                host_prepend_flag=${cross_flag_prefix//-/_}_${flag#*:}
+            else
+                host_prepend_flag=
+            fi
+            # CPPFLAGS
+            flag=${flag%:*}
+            # ARM_CPPFLAGS
+            host_flag=${cross_flag_prefix//-/_}_${flag}
+            # CPPFLAGS=$ARM_CPPFLAGS (or nothing)
+            [[ -n ${!host_flag} ]] && export ${flag}="${!host_flag}"
+            # CPPFLAGS=$ARM_CFLAGS $ARM_CPPFLAGS
+            if [[ -n ${host_prepend_flag} && -n ${!host_prepend_flag} ]] ; then
+                export ${flag}="${!host_prepend_flag} ${!flag}"
+            fi
+        done
+    else
+        [[ -z ${CBUILD} ]] && export CBUILD=${CHOST}
+        export REAL_CHOST=${CHOST}
+    fi
 
     ebuild_load_environment
     if [[ ${EBUILD} != - ]] ; then
