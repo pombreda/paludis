@@ -125,7 +125,7 @@ expatch()
 
 econf()
 {
-    local arg= default_args=() econf_args=() hates=() prefix=
+    local arg= default_args=() econf_args=() hates=() prefix= libdir=${LIBDIR:-lib}
 
     if [[ "${!PALUDIS_EBUILD_PHASE_VAR}" != "configure" ]] ; then
         die "econf called in phase ${!PALUDIS_EBUILD_PHASE_VAR}"
@@ -144,25 +144,15 @@ econf()
 
         if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
             prefix=/usr/$(exhost --target)
+            libdir=lib
         else
             prefix=/usr
-
-            # If the ebuild passed in --prefix, use that to set --libdir.  KDE
-            # at least needs this.
-            ECONF_PREFIX=/usr
         fi
 
         for arg in "${@}" ; do
             case "${arg}" in
             --hates=*) hates+=( "${arg#--hates=}" ) ;;
-            *)
-                if [[ ${FILESYSTEM_LAYOUT} != cross && ${arg} == --*prefix=* ]]
-                then
-                    ECONF_PREFIX=${arg#--*prefix=}
-                fi
-
-                econf_args+=( "${arg}" )
-            ;;
+            *) econf_args+=( "${arg}" ) ;;
             esac
         done
 
@@ -175,7 +165,7 @@ econf()
                    --prefix=${prefix}                   \
                    --bindir=${prefix}/${bindir:-bin}    \
                    --sbindir=${prefix}/${bindir:-sbin}  \
-                   --libdir=${prefix}/${LIBDIR:-lib}    \
+                   --libdir=${prefix}/${libdir}         \
                    --datadir=/usr/share                 \
                    --datarootdir=/usr/share             \
                    --docdir=/usr/share/doc/${PNVR}      \
@@ -185,12 +175,7 @@ econf()
                    --localstatedir=/var/lib             \
                    --disable-dependency-tracking        \
                    --disable-silent-rules               \
-                   --enable-fast-install                \
-                   $(if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
-                         echo --libdir=${prefix}/lib
-                     else
-                         echo --libdir=${ECONF_PREFIX}/${LIBDIR:-lib}
-                     fi) ; do
+                   --enable-fast-install; do
             local parameter=${arg%%=*}
             has ${parameter#--} "${hates[@]}" || default_args+=( "${arg}" )
         done
