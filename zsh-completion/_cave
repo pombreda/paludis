@@ -732,7 +732,7 @@ _cave_resolve_arguments=(
     '*'{--not-usable,-N}'[Consider installed packages matching the supplied specification as being unusable when breaking dependency cycles]' \
     '*'{--early,-E}'[When given a collection of otherwise equally desirable packages to order, order packages matching the supplied spec first]' \
     '*'{--late,-L}'[When given a collection of otherwise equally desirable packages to order, order packages matching the supplied spec last]' \
-    '(--make -m)'{--make,-m}'[Specify what to do with targets]:Make:((auto a install i binaries b chroot c))' \
+    '(--make -m)'{--make,-m}'[Specify what to do with targets]:Make:((auto a install i binaries b chroot c cross-compile C))' \
     '(--make-dependencies -M)'{--make-dependencies,-M}'[Specify what to do with dependencies of targets]:When:((auto runtime r all a none n))' \
     '*'{--via-binary,-b}'[When building a package matching the supplied spec, create a binary package and use that for the install]' \
     '(--dependencies-to-slash -/)'{--dependencies-to-slash,-/}'[Specify what to do with dependencies for the / filesystem when not working on /]:When:((all a runtime r build b none n))' \
