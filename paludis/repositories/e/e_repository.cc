@@ -271,6 +271,7 @@ namespace paludis
         std::shared_ptr<const MetadataValueKey<FSPath> > licence_groups_location_key;
         std::shared_ptr<Map<std::string, std::string> > sync_hosts;
         std::shared_ptr<const MetadataCollectionKey<Map<std::string, std::string> > > sync_host_key;
+        std::shared_ptr<const MetadataValueKey<std::string>> split_debug_location;
         std::list<std::shared_ptr<const MetadataKey> > about_keys;
 
         std::shared_ptr<EclassMtimes> eclass_mtimes;
@@ -374,6 +375,7 @@ namespace paludis
         licence_groups_location_key(layout->licence_groups_location_key()),
         sync_hosts(std::make_shared<Map<std::string, std::string> >()),
         sync_host_key(std::make_shared<LiteralMetadataStringStringMapKey>("sync_host", "sync_host", mkt_internal, sync_hosts)),
+        split_debug_location(std::make_shared<LiteralMetadataValueKey<std::string>>("split_debug_location", "split_debug_location", mkt_internal, params.split_debug_location())),
         eclass_mtimes(std::make_shared<EclassMtimes>(r, params.eclassdirs())),
         master_mtime(0),
         licence_groups(DeferredConstructionPtr<std::shared_ptr<LicenceGroups> > (
@@ -592,6 +594,7 @@ ERepository::_add_metadata_keys() const
     if (_imp->licence_groups_location_key)
         add_metadata_key(_imp->licence_groups_location_key);
     add_metadata_key(_imp->sync_host_key);
+    add_metadata_key(_imp->split_debug_location);
 
     std::for_each(_imp->about_keys.begin(), _imp->about_keys.end(), std::bind(
                 std::mem_fn(&ERepository::add_metadata_key), this, std::placeholders::_1));
@@ -933,6 +936,12 @@ bool
 ERepository::want_pre_post_phases() const
 {
     return false;
+}
+
+std::string
+ERepository::split_debug_location() const
+{
+    return _imp->params.split_debug_location();
 }
 
 HookResult
@@ -1481,6 +1490,10 @@ ERepository::repository_factory_create(
             throw ERepositoryConfigurationError("binary_destination = true, but binary_keywords_filter is unset or empty");
     }
 
+    std::string split_debug_location(f("split_debug_location"));
+    if (split_debug_location.empty())
+        split_debug_location = "/usr/lib/debug";
+
     return std::make_shared<ERepository>(make_named_values<ERepositoryParams>(
                 n::append_repository_name_to_write_cache() = append_repository_name_to_write_cache,
                 n::auto_profiles() = auto_profiles,
@@ -1509,6 +1522,7 @@ ERepository::repository_factory_create(
                 n::profiles_explicitly_set() = profiles_explicitly_set,
                 n::securitydir() = FSPath(securitydir).realpath_if_exists(),
                 n::setsdir() = FSPath(setsdir).realpath_if_exists(),
+                n::split_debug_location() = split_debug_location,
                 n::sync() = sync,
                 n::sync_options() = sync_options,
                 n::thin_manifests() = thin_manifests,

@@ -50,7 +50,7 @@ syn keyword PaludisRepositoriesConfKnownKey contained
             \ binary_uri_prefix binary_keywords_filter binary_destination binary_distdir
             \ eapi_when_unspecified eapi_when_unknown profile_eapi_when_unspecified
             \ name handler config_template config_filename cross_compile_host
-            \ tool_prefix
+            \ split_debug_location tool_prefix
 
 syn keyword PaludisRepositoriesConfBadKey contained
             \ world

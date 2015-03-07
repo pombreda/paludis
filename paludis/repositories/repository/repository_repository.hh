@@ -104,6 +104,9 @@ namespace paludis
                 virtual bool want_pre_post_phases() const
                     PALUDIS_ATTRIBUTE((warn_unused_result));
 
+                virtual std::string split_debug_location() const
+                    PALUDIS_ATTRIBUTE((warn_unused_result));
+
                 virtual void merge(const MergeParams &);
 
                 virtual const std::shared_ptr<const Set<std::string> > maybe_expand_licence_nonrecursively(

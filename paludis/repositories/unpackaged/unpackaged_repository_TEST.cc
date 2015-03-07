@@ -215,7 +215,8 @@ TEST(UnpackagedRepository, Install)
                 make_named_values<unpackaged_repositories::InstalledUnpackagedRepositoryParams>(
                     n::environment() = &env,
                     n::location() = FSPath("unpackaged_repository_TEST_dir/installed"),
-                    n::root() = FSPath("unpackaged_repository_TEST_dir/root")
+                    n::root() = FSPath("unpackaged_repository_TEST_dir/root"),
+                    n::split_debug_location() = "/usr/lib/debug"
                 )));
     env.add_repository(0, installed_repo);
 
@@ -263,7 +264,8 @@ TEST(UnpackagedRepository, InstallUnder)
                 make_named_values<unpackaged_repositories::InstalledUnpackagedRepositoryParams>(
                     n::environment() = &env,
                     n::location() = FSPath("unpackaged_repository_TEST_dir/under_installed"),
-                    n::root() = FSPath("unpackaged_repository_TEST_dir/under_root")
+                    n::root() = FSPath("unpackaged_repository_TEST_dir/under_root"),
+                    n::split_debug_location() = "/usr/lib/debug"
                 )));
     env.add_repository(0, installed_repo);
 
