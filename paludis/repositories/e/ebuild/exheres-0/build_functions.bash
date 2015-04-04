@@ -125,7 +125,9 @@ expatch()
 
 econf()
 {
-    local arg= default_args=() econf_args=() hates=() prefix= libdir=${LIBDIR:-lib}
+    local arg= default_args=() econf_args=() hates=()
+    local build_param= host_param=
+    local prefix= bindir= sbindir= libdir=
 
     if [[ "${!PALUDIS_EBUILD_PHASE_VAR}" != "configure" ]] ; then
         die "econf called in phase ${!PALUDIS_EBUILD_PHASE_VAR}"
@@ -142,13 +144,6 @@ econf()
             done
         fi
 
-        if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
-            prefix=/usr/$(exhost --target)
-            libdir=lib
-        else
-            prefix=/usr
-        fi
-
         for arg in "${@}" ; do
             case "${arg}" in
             --hates=*) hates+=( "${arg#--hates=}" ) ;;
@@ -157,24 +152,37 @@ econf()
         done
 
         if [[ ${FILESYSTEM_LAYOUT} == cross ]] ; then
-            local bindir=bin
+            build_param=--build=$(exhost --build)
+            host_param=--host=$(exhost --target)
+
+            prefix=/usr/$(exhost --target)
+            bindir=${prefix}/bin
+            sbindir=${prefix}/bin
+            libdir=${prefix}/lib
+        else
+            build_param=${CBUILD:+--build=${CBUILD}}
+            host_param=${CHOST:+--host=${CHOST}}
+
+            prefix=/usr
+            bindir=${prefix}/bin
+            sbindir=${prefix}/sbin
+            libdir=${prefix}/${LIBDIR:-lib}
         fi
 
-        for arg in --build=$(exhost --build)            \
-                   --host=$(exhost --target)            \
-                   --prefix=${prefix}                   \
-                   --bindir=${prefix}/${bindir:-bin}    \
-                   --sbindir=${prefix}/${bindir:-sbin}  \
-                   --libdir=${prefix}/${libdir}         \
-                   --datadir=/usr/share                 \
-                   --datarootdir=/usr/share             \
-                   --docdir=/usr/share/doc/${PNVR}      \
-                   --infodir=/usr/share/info            \
-                   --mandir=/usr/share/man              \
-                   --sysconfdir=/etc                    \
-                   --localstatedir=/var/lib             \
-                   --disable-dependency-tracking        \
-                   --disable-silent-rules               \
+        for arg in ${build_param} ${host_param}     \
+                   --prefix=${prefix}               \
+                   --bindir=${bindir}               \
+                   --sbindir=${sbindir}             \
+                   --libdir=${libdir}               \
+                   --datadir=/usr/share             \
+                   --datarootdir=/usr/share         \
+                   --docdir=/usr/share/doc/${PNVR}  \
+                   --infodir=/usr/share/info        \
+                   --mandir=/usr/share/man          \
+                   --sysconfdir=/etc                \
+                   --localstatedir=/var/lib         \
+                   --disable-dependency-tracking    \
+                   --disable-silent-rules           \
                    --enable-fast-install; do
             local parameter=${arg%%=*}
             has ${parameter#--} "${hates[@]}" || default_args+=( "${arg}" )
