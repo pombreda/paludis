@@ -82,6 +82,10 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 LT_INIT
 AC_PROG_MAKE_SET
+AC_CHECK_TOOL(STRIP, strip, strip)
+
+STRIP_TOOL_PREFIX=${STRIP%strip}
+AC_SUBST([PALUDIS_BUILD_STRIP_TOOL_PREFIX], [$STRIP_TOOL_PREFIX])
 dnl }}}
 
 dnl {{{ make pkg-config work... dumb macro...

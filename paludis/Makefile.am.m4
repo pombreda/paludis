@@ -21,6 +21,7 @@ $1_TEST_LDADD = \
 	$(DYNAMIC_LD_LIBS)
 $1_TEST_LDFLAGS = @GTESTDEPS_LDFLAGS@ @GTESTDEPS_LIBS@
 $1_TEST_CXXFLAGS = -I$(top_srcdir) $(AM_CXXFLAGS) @PALUDIS_CXXFLAGS_NO_DEBUGGING@ @GTESTDEPS_CXXFLAGS@
+$1_TEST_CPPFLAGS = -DPALUDIS_BUILD_STRIP_TOOL_PREFIX=\"@PALUDIS_BUILD_STRIP_TOOL_PREFIX@\"
 ')dnl
 define(`addtestscript', `define(`testscriptlist', testscriptlist `$1_TEST_setup.sh $1_TEST_cleanup.sh')')dnl
 define(`addhh', `define(`filelist', filelist `$1.hh')define(`headerlist', headerlist `$1.hh')')dnl
