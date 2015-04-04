@@ -97,10 +97,15 @@ namespace
                     ));
     }
 
-    InfoActionOptions * make_info_action_options()
+    InfoActionOptions * make_info_action_options(
+            const std::string & cross_compile_host,
+            const std::string & tool_prefix
+            )
     {
         return new InfoActionOptions(make_named_values<InfoActionOptions>(
-                    n::make_output_manager() = &make_standard_output_manager
+                    n::cross_compile_host() = cross_compile_host,
+                    n::make_output_manager() = &make_standard_output_manager,
+                    n::tool_prefix() = tool_prefix
                     ));
     }
 
@@ -122,9 +127,11 @@ namespace
     }
 
     FetchActionOptions * make_fetch_action_options(
+            const std::string & cross_compile_host,
             const bool exclude_unmirrorable,
             const bool fetch_unneeded,
-            const bool safe_resume
+            const bool safe_resume,
+            const std::string & tool_prefix
             )
     {
         FetchParts parts;
@@ -133,6 +140,7 @@ namespace
             parts += fp_unneeded;
 
         return new FetchActionOptions(make_named_values<FetchActionOptions>(
+                    n::cross_compile_host() = cross_compile_host,
                     n::errors() = std::make_shared<Sequence<FetchActionFailure>>(),
                     n::exclude_unmirrorable() = exclude_unmirrorable,
                     n::fetch_parts() = parts,
@@ -140,6 +148,7 @@ namespace
                     n::ignore_unfetched() = false,
                     n::make_output_manager() = &make_standard_output_manager,
                     n::safe_resume() = safe_resume,
+                    n::tool_prefix() = tool_prefix,
                     n::want_phase() = &want_all_phases
                     ));
     }
@@ -230,8 +239,20 @@ void expose_action()
 
         .def("__init__",
                 bp::make_constructor(&make_info_action_options),
-                "__init__()"
+                "__init__(String, String)"
             )
+
+        .add_property("cross_compile_host",
+                &named_values_getter<InfoActionOptions, n::cross_compile_host, std::string, &InfoActionOptions::cross_compile_host>,
+                &named_values_setter<InfoActionOptions, n::cross_compile_host, std::string, &InfoActionOptions::cross_compile_host>,
+                "[rw] String"
+                )
+
+        .add_property("tool_prefix",
+                &named_values_getter<InfoActionOptions, n::tool_prefix, std::string, &InfoActionOptions::tool_prefix>,
+                &named_values_setter<InfoActionOptions, n::tool_prefix, std::string, &InfoActionOptions::tool_prefix>,
+                "[rw] String"
+                )
         ;
 
     /**
@@ -262,7 +283,7 @@ void expose_action()
 
         .def("__init__",
                 bp::make_constructor(&make_fetch_action_options),
-                "__init__(exclude_unmirrorable, fetch_uneeded, safe_resume)"
+                "__init__(cross_compile_host, exclude_unmirrorable, fetch_uneeded, safe_resume, tool_prefix)"
             )
 
         .add_property("exclude_unmirrorable",

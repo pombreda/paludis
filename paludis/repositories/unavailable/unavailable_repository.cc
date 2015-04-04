@@ -136,6 +136,12 @@ UnavailableRepository::need_keys_added() const
 {
 }
 
+const std::shared_ptr<const MetadataValueKey<std::string>>
+UnavailableRepository::cross_compile_host_key() const
+{
+    return nullptr;
+}
+
 const std::shared_ptr<const MetadataValueKey<std::string> >
 UnavailableRepository::format_key() const
 {
@@ -417,6 +423,12 @@ const std::shared_ptr<const MetadataCollectionKey<Map<std::string, std::string> 
 UnavailableRepository::sync_host_key() const
 {
     return _imp->sync_host_key;
+}
+
+const std::shared_ptr<const MetadataValueKey<std::string>>
+UnavailableRepository::tool_prefix_key() const
+{
+    return nullptr;
 }
 
 const std::shared_ptr<const Set<std::string> >

@@ -73,10 +73,12 @@ namespace paludis
 
                 virtual const bool is_unimportant() const;
 
+                virtual const std::shared_ptr<const MetadataValueKey<std::string>> cross_compile_host_key() const;
                 virtual const std::shared_ptr<const MetadataValueKey<std::string> > format_key() const;
                 virtual const std::shared_ptr<const MetadataValueKey<FSPath> > location_key() const;
                 virtual const std::shared_ptr<const MetadataValueKey<FSPath> > installed_root_key() const;
                 virtual const std::shared_ptr<const MetadataCollectionKey<Map<std::string, std::string> > > sync_host_key() const;
+                virtual const std::shared_ptr<const MetadataValueKey<std::string>> tool_prefix_key() const;
 
                 virtual bool has_category_named(const CategoryNamePart & c, const RepositoryContentMayExcludes &) const;
                 virtual bool has_package_named(const QualifiedPackageName & q, const RepositoryContentMayExcludes &) const;

@@ -46,10 +46,10 @@ class TestCase_01_InstallActionOptions(unittest.TestCase):
 
 class TestCase_02_FetchActionOptions(unittest.TestCase):
     def test_01_create(self):
-        FetchActionOptions(True, True, True)
+        FetchActionOptions("", True, True, True, "")
 
     def test_02_data_members(self):
-        fao = FetchActionOptions(True, True, True)
+        fao = FetchActionOptions("", True, True, True, "")
 
         self.assertEquals(fao.exclude_unmirrorable, True)
         self.assertEquals(fao.safe_resume, True)
@@ -69,7 +69,7 @@ class TestCase_04_InstallAction(unittest.TestCase):
 
 class TestCase_05_FetchAction(unittest.TestCase):
     def test_01_create(self):
-        FetchAction(FetchActionOptions(False, True, True))
+        FetchAction(FetchActionOptions("", False, True, True, ""))
 
 class TestCase_06_UninstallAction(unittest.TestCase):
     def test_01_create(self):
@@ -88,7 +88,7 @@ class TestCase_09_ConfigAction(unittest.TestCase):
 
 class TestCase_10_InfoAction(unittest.TestCase):
     def test_01_create(self):
-        InfoAction(InfoActionOptions())
+        InfoAction(InfoActionOptions("", ""))
 
 class TestCase_10_SupportsActionTests(unittest.TestCase):
     def test_01_create(self):

@@ -131,6 +131,8 @@ DigestCommand::run(
         Context i_context("When fetching ID '" + stringify(**i) + "':");
 
         FetchAction a(make_named_values<FetchActionOptions>(
+                    // TODO(compnerd) provide a cross-compile-host
+                    n::cross_compile_host() = "",
                     n::errors() = std::make_shared<Sequence<FetchActionFailure>>(),
                     n::exclude_unmirrorable() = false,
                     n::fetch_parts() = FetchParts() + fp_regulars + fp_extras + fp_unneeded,
@@ -138,6 +140,8 @@ DigestCommand::run(
                     n::ignore_unfetched() = false,
                     n::make_output_manager() = &make_standard_output_manager,
                     n::safe_resume() = true,
+                    // TODO(compnerd) provide a tool-prefix
+                    n::tool_prefix() = "",
                     n::want_phase() = &want_all_phases
                     ));
 
