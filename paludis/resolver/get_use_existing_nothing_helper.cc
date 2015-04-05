@@ -137,6 +137,10 @@ namespace
                     can = &can_chroot;
                     break;
 
+                case dt_cross_compile:
+                    can = &can_cross_compile;
+                    break;
+
                 case last_dt:
                     break;
             }

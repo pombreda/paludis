@@ -81,12 +81,16 @@ FindRepositoryForHelper::operator() (
         switch (resolution->resolvent().destination_type())
         {
             case dt_install_to_slash:
-                if ((! (*r)->installed_root_key()) ||
+                if ((*r)->cross_compile_host_key() ||
+                    (! (*r)->installed_root_key()) ||
                     ((*r)->installed_root_key()->parse_value() != _imp->env->system_root_key()->parse_value()))
                     continue;
                 break;
 
             case dt_install_to_chroot:
+                if ((*r)->cross_compile_host_key())
+                    continue;
+
                 if (_imp->chroot_path) {
                     if ((! (*r)->installed_root_key()) || ((*r)->installed_root_key()->parse_value() != *_imp->chroot_path))
                         continue;
@@ -99,6 +103,11 @@ FindRepositoryForHelper::operator() (
 
             case dt_create_binary:
                 if ((*r)->installed_root_key())
+                    continue;
+                break;
+
+            case dt_cross_compile:
+                if (! (*r)->cross_compile_host_key())
                     continue;
                 break;
 

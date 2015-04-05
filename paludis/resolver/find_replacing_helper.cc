@@ -80,14 +80,23 @@ FindReplacingHelper::operator() (
     if (repo->installed_root_key())
     {
         const auto & dest_root = repo->installed_root_key()->parse_value();
+        const auto & dest_host =
+            repo->cross_compile_host_key()
+                ? repo->cross_compile_host_key()->parse_value()
+                : "";
 
         for (auto r(_imp->env->begin_repositories()), r_end(_imp->env->end_repositories()) ;
                 r != r_end ; ++r)
         {
             const auto repository = *r;
+            const auto & repo_host =
+                repository->cross_compile_host_key()
+                    ? repository->cross_compile_host_key()->parse_value()
+                    : "";
 
             if (repository->installed_root_key() &&
-                    repository->installed_root_key()->parse_value() == dest_root)
+                    repository->installed_root_key()->parse_value() == dest_root &&
+                    repo_host == dest_host)
                 repos.insert(repository->name());
         }
     }

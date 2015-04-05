@@ -60,6 +60,16 @@ paludis::resolver::can_chroot(const std::shared_ptr<const PackageID> & id)
     return v->end() == v->find("unchrootable");
 }
 
+bool
+paludis::resolver::can_cross_compile(const std::shared_ptr<const PackageID> & id)
+{
+    if (! id->behaviours_key())
+        return true;
+
+    auto v(id->behaviours_key()->parse_value());
+    return v->end() == v->find("uncrossable");
+}
+
 namespace
 {
     struct BinaryDestinationGeneratorHandler :
@@ -94,6 +104,41 @@ namespace
         {
         }
     };
+
+    struct CrossCompiledGeneratorHandler :
+        AllGeneratorHandlerBase
+    {
+        virtual std::shared_ptr<const RepositoryNameSet>
+        repositories(const Environment * const env,
+                     const RepositoryContentMayExcludes &) const
+        {
+            auto result(std::make_shared<RepositoryNameSet>());
+
+            for (auto r(env->begin_repositories()), rend(env->end_repositories());
+                 r != rend; ++r) {
+                auto repository = *r;
+
+                if (repository->cross_compile_host_key())
+                    result->insert(repository->name());
+            }
+
+            return result;
+        }
+
+        virtual std::string as_string() const
+        {
+            return "cross-compiled destination repositories";
+        }
+    };
+
+    struct CrossCompiledDestinationGenerator :
+        Generator
+    {
+        CrossCompiledDestinationGenerator()
+            : Generator(std::make_shared<CrossCompiledGeneratorHandler>())
+        {
+        }
+    };
 }
 
 FilteredGenerator
@@ -112,6 +157,9 @@ paludis::resolver::destination_filtered_generator(
 
         case dt_create_binary:
             return g & BinaryDestinationGenerator();
+
+        case dt_cross_compile:
+            return g & CrossCompiledDestinationGenerator();
 
         case last_dt:
             break;
@@ -137,6 +185,9 @@ paludis::resolver::make_destination_type_filter(
                     return ! can_make_binary_for(id);
                     },
                     "can be made into a binary");
+
+        case dt_cross_compile:
+            return filter::All();
 
         case last_dt:
             break;
