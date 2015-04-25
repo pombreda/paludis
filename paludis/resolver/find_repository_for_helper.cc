@@ -45,6 +45,7 @@ namespace paludis
     {
         const Environment * const env;
         std::unique_ptr<const FSPath> chroot_path;
+        std::string cross_compile_host;
 
         Imp(const Environment * const e) :
             env(e)
@@ -109,6 +110,9 @@ FindRepositoryForHelper::operator() (
             case dt_cross_compile:
                 if (! (*r)->cross_compile_host_key())
                     continue;
+                if (! _imp->cross_compile_host.empty())
+                    if ((*r)->cross_compile_host_key()->parse_value() != _imp->cross_compile_host)
+                        continue;
                 break;
 
             case last_dt:
@@ -148,6 +152,12 @@ void
 FindRepositoryForHelper::set_chroot_path(const FSPath & p)
 {
     _imp->chroot_path.reset(new FSPath(p));
+}
+
+void
+FindRepositoryForHelper::set_cross_compile_host(const std::string & target)
+{
+    _imp->cross_compile_host = target;
 }
 
 namespace paludis
