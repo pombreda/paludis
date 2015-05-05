@@ -564,7 +564,7 @@ ebuild_load_em_up_dan()
             if [[ ${flags} == *:* ]] ; then
                 host_prepend_flags=${cross_flags_prefix//-/_}_${flags#*:}
             else
-                host_prepend_flag=
+                host_prepend_flags=
             fi
 
             flags=${flags%:*}
