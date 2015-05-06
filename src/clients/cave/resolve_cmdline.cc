@@ -274,7 +274,7 @@ ResolveCommandLineResolutionOptions::ResolveCommandLineResolutionOptions(args::A
             ("chroot",                'c', "Install targets to a chroot")
             ("cross-compile",         'x', "cross compile package (Exherbo only)"),
             "auto"),
-    a_cross_host(&g_destination_options, "cross-host", '\0', "Specify which cross host to use"),
+    a_cross_host(&g_destination_options, "cross-host", '4', "Specify which cross host to use"),
     a_make_dependencies(&g_destination_options, "make-dependencies", 'M', "Specify what to do with dependencies of "
             "targets. Only useful when '--make' is not set to 'install', since dependencies on / are considered "
             "specially.",
